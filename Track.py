@@ -14,6 +14,7 @@ CP3 = 7
 CP4 = 8
 FINISH = 9
 
+
 def colorToNumber(color):
     match color:
         case [0, 255, 255]:
@@ -69,6 +70,30 @@ def getLocations(track_grid, type: int):
                 locations.add((i,j))
     return locations
 
+# algorithm to determine which cells are passed thru
+def bresenham(start, end):
+    x0, y0 = start
+    x1, y1 = end
+    cells = []
+    dx = abs(x1 - x0)
+    dy = abs(y1 - y0)
+    x, y = x0, y0
+    sx = 1 if x0 < x1 else -1
+    sy = 1 if y0 < y1 else -1
+    err = dx - dy
+
+    while True:
+        cells.append((x, y))
+        if x == x1 and y == y1:
+            break
+        e2 = 2 * err
+        if e2 > -dy:
+            err -= dy
+            x += sx
+        if e2 < dx:
+            err += dx
+            y += sy
+    return cells
             
 class Track():
     # height
@@ -76,6 +101,8 @@ class Track():
     # n_checkpoints
     # start_coords
     # track 
+
+    # valid_moves 
                 
     def __init__(self, image_path):
         image = Image.open(image_path)
@@ -92,9 +119,28 @@ class Track():
 
         self.n_checkpoints = len(self.checkpoints)
 
+        # hashmap of move -> {False,True}
+        # 
+        self.valid_moves = {}
+
+        # list of checkpoints crossed in a given move
+        self.checkpoints_crossed = {}
+
     def getStart(self):
         return self.start_coords
     
+    def getCell(self,position):
+        return self.track_grid[position[0]][position[1]]
+    
+    def isWall(self,position):
+        return self.getCell(position) == WALL
+    
+    def checkForWalls(self, path):
+        for position in path:
+            if self.isWall(position):
+                return True
+        return False
+
     def getCheckpoints(self):
         checkpoints = []
 
@@ -109,16 +155,41 @@ class Track():
         locations = getLocations(self.track_grid, FINISH)
         checkpoints.append(locations)
         return checkpoints
+    
+    def checkValid(self, start, end):
+        key = (start[0], start[1], end[0], end[1])
 
+        # if it's been checked, return value
+        if key in self.valid_moves:
+            return self.valid_moves[key]
+        
+        # otherwise, check path
+        path = bresenham(start, end)
+        isValid = not self.checkForWalls(path)
 
+        # update hashmap
+        self.valid_moves[key] = isValid
+        return isValid
+    
+    def checkCheckpoint(self, start, end):
+        key = (start[0], start[1], end[0], end[1])
 
+        # if it's been checked, return value
+        if key in self.checkpoints_crossed:
+            return self.checkpoints_crossed[key]
+        
+        # otherwise, check path
+        path = bresenham(start, end)
+        cp_set = set()
+        for position in path:
+            val = self.getCell(position)
+            if val > 4 and val < 10:
+                cp_set.add(val)
 
-
+        # update hashmap
+        self.checkpoints_crossed[key] = cp_set
+        return cp_set
         
 
 
-test = Track("example_mask.png")
 
-
-
-print()
