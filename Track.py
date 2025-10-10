@@ -2,6 +2,7 @@
 ## Track
 import numpy as np
 from PIL import Image
+from math import floor
 
 START = 0
 ROAD = 1
@@ -94,7 +95,17 @@ def bresenham(start, end):
             err += dx
             y += sy
     return cells
-            
+
+def shortestDistance(position, next_checkpoint):
+    tally = []
+    for nextPos in next_checkpoint:
+        tally.append(distanceSquared(position, nextPos))
+
+    return min(tally) ** (1/2)
+
+def distanceSquared(p1, p2):
+    return (p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2
+
 class Track():
     # height
     # width
@@ -125,6 +136,25 @@ class Track():
 
         # list of checkpoints crossed in a given move
         self.checkpoints_crossed = {}
+
+        # map of point/velocities to heuristic values
+        self.heuristic = {}
+
+        # list of shortest distances between checkpoints
+        self.checkpoint_distances = self.getCheckpointDistances()
+
+    def getCheckpointDistances(self):
+        distances = []
+        for i in range(self.n_checkpoints-1):
+            cp1 = self.checkpoints[i]
+            cp2 = self.checkpoints[i+1]
+            tally = []
+            for pos in cp1:      
+                tally.append(shortestDistance(pos, cp2))
+            distances.append(min(tally))
+        
+        return distances
+
 
     def getStart(self):
         return self.start_coords
@@ -190,6 +220,30 @@ class Track():
         self.checkpoints_crossed[key] = cp_set
         return cp_set
         
+    def getHeuristic(self, position, velocity, checkpoint):
+        key = (position[0], position[1], velocity[0], velocity[1], checkpoint)
 
+        if key in self.heuristic:
+            return self.heuristic[key]
+        
+        # if not yet calculated, add distance to next cp to remaining cp distances
+        next_distance = distanceSquared(position, self.checkpoints[checkpoint]) ** (1/2)
 
+        # get future distances from self.checkpoint_distances
+        future_distance = 0
+        for i in range(checkpoint, self.n_checkpoints-1):
+            future_distances += self.checkpoint_distances[i]
+        
+        distance = next_distance + future_distance
+
+        # estimate time from distance and current velocity
+        acceleration = 2 ** (1/2)
+        speed = (velocity[0] + velocity[1]) ** (1/2)
+
+        # quadratic formula
+        time = (-speed + (speed ** 2 + 4 * acceleration * distance) ** (1/2)) / (2 * acceleration)
+
+        # return floor to ensure admissible
+        return floor(time)
+        
 

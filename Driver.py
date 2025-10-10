@@ -1,5 +1,5 @@
 
-from Track import Track
+from track import Track
 
 FINISHED = 2
 OKAY = 1
@@ -118,6 +118,9 @@ class Driver:
             return self
         
         return self
+    
+    def getHeuristic(self):
+        return self.track.getHeuristic(self.location, self.velocity, self.current_checkpoint)
 
 
 

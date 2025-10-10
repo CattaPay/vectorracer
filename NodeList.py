@@ -2,8 +2,8 @@
 
 ## 
 
-from Track import Track
-from Driver import Driver
+from track import Track
+from driver import Driver
 import queue
 
 track = Track("example_mask.png")
