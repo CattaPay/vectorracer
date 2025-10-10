@@ -84,7 +84,11 @@ def bresenham(start, end):
     err = dx - dy
 
     while True:
-        cells.append((x, y))
+        # causing problems
+        for ix in range(-LINE_RAD, LINE_RAD + 1):
+            for iy in range(-LINE_RAD, LINE_RAD + 1):
+                cells.append((x + ix, y + iy))
+        
         if x == x1 and y == y1:
             break
         e2 = 2 * err
@@ -94,7 +98,25 @@ def bresenham(start, end):
         if e2 < dx:
             err += dx
             y += sy
+    
     return cells
+
+# includes orthogonal cells additionally
+def bresenham_with_buffer(start, end, radius=1):
+    x0, y0 = start
+    x1, y1 = end
+    base = bresenham(start, end)
+    expanded = set()
+    for (x, y) in base:
+        for dx in range(-radius, radius+2):
+            for dy in range(-radius, radius+2):
+                if (dx ** 2 + dy ** 2) <= radius:
+                    expanded.add((x+dx, y+dy))
+    return sorted(expanded)
+
+# radius squared of bresenham line
+LINE_RAD = 2
+
 
 def shortestDistance(position, next_checkpoint):
     tally = []
@@ -120,7 +142,7 @@ class Track():
         pixel_data_rgb = np.asarray(image.convert("RGB"))
 
         self.track_grid = rgbToTrack(pixel_data_rgb)
-        self.height = self.track_grid.shape[0]
+        self.height = self.track_grid.shape[1]
         self.width = self.track_grid.shape[0]
         self.start_coords = getStart(self.track_grid)
 
@@ -143,6 +165,9 @@ class Track():
         # list of shortest distances between checkpoints
         self.checkpoint_distances = self.getCheckpointDistances()
 
+
+    ## this needs work ##
+    # maybe only consider boundary points>
     def getCheckpointDistances(self):
         distances = []
         for i in range(self.n_checkpoints-1):
@@ -160,7 +185,9 @@ class Track():
         return self.start_coords
     
     def getCell(self,position):
-        return self.track_grid[position[0]][position[1]]
+        if position[0] >= self.width or position[0] < 0 or position[1] >= self.height or position[1] < 0:
+            return WALL
+        return int(self.track_grid[position[0]][position[1]])
     
     def isWall(self,position):
         return self.getCell(position) == WALL
@@ -226,19 +253,23 @@ class Track():
         if key in self.heuristic:
             return self.heuristic[key]
         
-        # if not yet calculated, add distance to next cp to remaining cp distances
-        next_distance = distanceSquared(position, self.checkpoints[checkpoint]) ** (1/2)
+        # if not yet calculated, add distance to next cp to remaining cp distance
+        if checkpoint >= self.n_checkpoints:
+            next_distance = 0
+        else:
+            next_distance = shortestDistance(position, self.checkpoints[checkpoint])
 
         # get future distances from self.checkpoint_distances
         future_distance = 0
-        for i in range(checkpoint, self.n_checkpoints-1):
-            future_distances += self.checkpoint_distances[i]
+        if checkpoint < self.n_checkpoints - 1:
+            for i in range(checkpoint, self.n_checkpoints-1):
+                future_distance += self.checkpoint_distances[i]
         
-        distance = next_distance + future_distance
+        distance = (next_distance + future_distance) / 15
 
         # estimate time from distance and current velocity
         acceleration = 2 ** (1/2)
-        speed = (velocity[0] + velocity[1]) ** (1/2)
+        speed = (velocity[0] ** 2 + velocity[1] ** 2) ** (1/2)
 
         # quadratic formula
         time = (-speed + (speed ** 2 + 4 * acceleration * distance) ** (1/2)) / (2 * acceleration)

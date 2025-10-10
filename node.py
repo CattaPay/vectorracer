@@ -24,6 +24,12 @@ class Node:
     def adjacentDrivers(self):
         return self.driver.getAdjacent()
     
+    def getValue(self):
+        return self.best_time + self.heuristic
+    
+    def checkEnd(self):
+        return self.driver.checkEnd()
+    
 
 
 

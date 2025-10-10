@@ -1,5 +1,5 @@
 
-from track import Track
+from track import *
 
 FINISHED = 2
 OKAY = 1
@@ -30,6 +30,12 @@ class Driver:
         out.current_checkpoint = self.current_checkpoint
         return out
 
+    def essentials(self):
+        return (self.location[0],
+                self.location[1],
+                self.velocity[0],
+                self.velocity[1],
+                self.current_checkpoint)
 
     def getStart(self):
         x,y = self.track.getStart()
@@ -42,12 +48,20 @@ class Driver:
         return self.track.getCell(self.location)
     
     def getActions(self):
-        # if type is normal
+        material = self.getGroundType()
+
         # need to add things if on gravel, curb or diff move type
+        if material == CURB:
+            return[(0,0)]
+        
+        # fix gravel at some point
+        if material == GRAVEL:
+            return[]
+        
+        # if type is normal
         return [(1,1), (0,1), (-1,1),
-                (1,0), (0,0), (-1,0),
-                (1,-1), (0,-1), (-1,-1)]
-    
+                    (1,0), (0,0), (-1,0),
+                    (1,-1), (0,-1), (-1,-1)]
     # gets all possible next states
     def getAdjacent(self):
         possible_actions = self.getActions()
@@ -68,6 +82,12 @@ class Driver:
     
     def checkPath(self, end):
         return self.track.checkValid(self.location, end)
+    
+    # returns the value of 
+    def nextCheckpoint(self):
+        if self.current_checkpoint == self.track.n_checkpoints - 1:
+            return FINISH
+        return self.current_checkpoint + 5
     
     def move(self, action):
         # update velocity
@@ -91,14 +111,15 @@ class Driver:
         
         # if it crossed the next one, update... repeat if it crossed multiple
         for i in range(5):
-            if self.current_checkpoint in checkpoints:
+            if self.nextCheckpoint() in checkpoints:
                 self.current_checkpoint += 1
+                if self.current_checkpoint == self.track.n_checkpoints:
+                    break
             else:
                 break
         
         # if path is valid, move to new point, increment time
         self.location = target_position
-        self.time += 1
         
         # if finished, 
         if self.checkEnd():
@@ -121,6 +142,24 @@ class Driver:
     
     def getHeuristic(self):
         return self.track.getHeuristic(self.location, self.velocity, self.current_checkpoint)
+    
+    # makes it hashable
+    def __hash__(self):
+        things = self.essentials()
+        val = 0
+
+        for i in range(5):
+            val *= 2000
+            val += things[i]
+
+        return val
+
+    def __eq__(self, other):
+        if not isinstance(other, Driver):
+            return NotImplemented
+        
+        return self.essentials() == other.essentials()  # decide what makes two tasks “the same”
+
 
 
 
