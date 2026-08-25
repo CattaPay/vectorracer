@@ -53,7 +53,9 @@ positions_seen = {}
 frontier = DriverList(positions_seen)
 
 print("Initializing Track")
-track = Track("images/clean_maze2.png")
+
+name = "maze2"
+track = Track("images/clean_" + str(name) + ".png")
 #track = Track("images/test_track.png")
 
 # for simplicity lol
@@ -84,7 +86,9 @@ while not frontier.empty():
     if counter % 100 == 0:
         print(driver.current_checkpoint,prevNode.driver.location, prevNode.driver.velocity, prevNode.best_time, prevNode.heuristic)
 
-    if prevNode.getTime() <= max_time:
+
+    ## can compare heuristic to max_time, as it is admissible
+    if prevNode.getTime() + prevNode.heuristic <= max_time:
         # check if finished
         if driver.checkEnd():
             solutions.append(prevNode)
@@ -173,23 +177,56 @@ best_score = 3
 
 for node in solutions:
     score = getFinalTime(node)
-    print(score)
+    print(node.getTime(), score)
     if score < best_score:
         best_score = score
         best_node = node
         
-def printAccelerations(node: Node):
+def getAccelerations(node: Node):
     box = []
     getVelocitiesRecursive(node, box)
-
+    yuh = []
     for i in range(len(box)-1):
-        print(box[i][0][0] - box[i+1][0][0], box[i][0][1] - box[i+1][0][1])
+        yuh.append((box[i][0][0] - box[i+1][0][0], box[i][0][1] - box[i+1][0][1]))
         
-print()
-printVelocitiesRecursive(best_node)
+    return yuh
+
+def getDiagram(dir):
+    gummo = ""
+    for i in range(-1, 2):
+        for j in range(-1, 2):
+            if dir[0] == i and dir[1] == j:
+                gummo += "O"
+            else:
+                gummo += "."
+        gummo += "\n"
+
+    return gummo
+
+
+
+box = []
+getVelocitiesRecursive(best_node, box)
+
+for i in range(len(box)):
+    print(len(box) - i - 2, box[i][0])
+        
+# print()
+# printVelocitiesRecursive(best_node)
 
 
 print(best_score)
 print(best_node.getTime())
-print(len(solutions))
-printAccelerations(best_node)
+
+print()
+
+accel = getAccelerations(best_node)
+
+for i in range(len(accel)):
+    ind = len(accel) - i - 1
+    dir = accel[ind]
+    print(str(i) + "-----------")
+    print(getDiagram(dir))
+    print(dir)
+
+

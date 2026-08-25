@@ -115,7 +115,7 @@ def bresenham_with_buffer(start, end, radius=1):
     return sorted(expanded)
 
 # radius squared of bresenham line
-LINE_RAD = 2
+LINE_RAD = 1
 
 
 def shortestDistance(position, next_checkpoint):
@@ -127,6 +127,21 @@ def shortestDistance(position, next_checkpoint):
 
 def distanceSquared(p1, p2):
     return (p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2
+
+def neighboursInSet(point, area):
+    for dx in [-1, 0, 1]:
+        for dy in [-1, 0, 1]:
+            if (point[0] + dx, point[1] + dy) not in area:
+                return False
+    return True
+
+def getBoundary(area):
+    boundary = set()
+    for point in area:
+        if not neighboursInSet(point, area):
+            boundary.add(point)
+    
+    return boundary
 
 class Track():
     # height
@@ -169,17 +184,22 @@ class Track():
     ## this needs work ##
     # maybe only consider boundary points>
     def getCheckpointDistances(self):
+        
+        # get boundaries
+        checkpoint_boundaries = []
+        for area in self.checkpoints:
+            checkpoint_boundaries.append(getBoundary(area))
+
         distances = []
-        for i in range(self.n_checkpoints-1):
-            cp1 = self.checkpoints[i]
-            cp2 = self.checkpoints[i+1]
+        for i in range(len(checkpoint_boundaries)-1):
+            cp1 = checkpoint_boundaries[i]
+            cp2 = checkpoint_boundaries[i+1]
             tally = []
             for pos in cp1:      
                 tally.append(shortestDistance(pos, cp2))
             distances.append(min(tally))
         
         return distances
-
 
     def getStart(self):
         return self.start_coords

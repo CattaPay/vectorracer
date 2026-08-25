@@ -56,7 +56,41 @@ class Driver:
         
         # fix gravel at some point
         if material == GRAVEL:
-            return[]
+            # loop over directions
+            possible_i = []
+            possible_j = []
+
+            # if moving up, down is always option
+            if self.velocity[0] >= 0:
+                possible_i.append(-1)
+            
+            # if moving up, down is always option
+            if self.velocity[0] <= 0:
+                possible_i.append(1)
+            
+            # if moving slow, neutral is option
+            if abs(self.velocity[0]) <= 1:
+                possible_i.append(0)
+            
+            # if moving up, down is always option
+            if self.velocity[1] >= 0:
+                possible_j.append(-1)
+            
+            # if moving up, down is always option
+            if self.velocity[1] <= 0:
+                possible_j.append(1)
+            
+            # if moving slow, neutral is option
+            if abs(self.velocity[1]) <= 1:
+                possible_j.append(0)
+
+            out = []
+            for i in possible_i:
+                # if 
+                for j in possible_j:
+                    out.append((i,j))
+
+            return out
         
         # if type is normal
         return [(1,1), (0,1), (-1,1),

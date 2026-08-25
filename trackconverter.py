@@ -35,7 +35,9 @@ CURB = [127, 127, 127]
 import numpy as np
 from PIL import Image
 
-image = Image.open("raw_images/maze_2.png")
+name = "canyon_run"
+image = Image.open("raw_images/" + str(name) + ".png")
+
 pixel_data_rgb = np.asarray(image.convert("RGB"))
 
 # loop over array of pixels
@@ -103,7 +105,6 @@ for i in range(height):
 
     modified_img.append(row)
 
-print("buh")
 np_img = np.array(modified_img)
 new_img = Image.fromarray(np_img.astype(np.uint8))
-new_img.save("intimages/clean_maze2.png")
+new_img.save("intimages/" + str(name) + ".png")

@@ -1,7 +1,10 @@
 
 
 testing.py
+tracks.txt
 
 /images
 /intimages
 /raw_images
+
+/__pycache__
