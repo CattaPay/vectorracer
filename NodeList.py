@@ -192,16 +192,16 @@ def getAccelerations(node: Node):
     return yuh
 
 def getDiagram(dir):
-    gummo = ""
+    stra = ""
     for i in range(-1, 2):
         for j in range(-1, 2):
             if dir[0] == i and dir[1] == j:
-                gummo += "O"
+                stra += "O"
             else:
-                gummo += "."
-        gummo += "\n"
+                stra += "."
+        stra += "\n"
 
-    return gummo
+    return stra
 
 
 
